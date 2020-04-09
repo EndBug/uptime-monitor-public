@@ -1,0 +1,32 @@
+{
+  "name": "uptime-monitor-public",
+  "version": "0.0.0",
+  "description": "A public Discord bot that notifies you when one of your 'watched' accounts goes offline.",
+  "main": "src/core/start.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EndBug/uptime-monitor-public.git"
+  },
+  "author": "Federico Grandi <fgrandi30@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/EndBug/uptime-monitor-public/issues"
+  },
+  "homepage": "https://github.com/EndBug/uptime-monitor-public#readme",
+  "dependencies": {
+    "discord.js": "^12.1.1",
+    "dotenv": "^8.2.0",
+    "nodemon": "^2.0.3",
+    "ts-node": "^8.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "^13.11.1",
+    "@typescript-eslint/eslint-plugin": "^2.27.0",
+    "@typescript-eslint/parser": "^2.27.0",
+    "eslint": "^6.8.0",
+    "typescript": "^3.8.3"
+  }
+}

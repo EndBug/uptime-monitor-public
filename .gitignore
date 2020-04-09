@@ -2,4 +2,3 @@ node_modules
 *.ini
 reloadme.json
 .env
-settings.sqlite3
