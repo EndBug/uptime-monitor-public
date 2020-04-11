@@ -4,6 +4,7 @@
   "description": "A public Discord bot that notifies you when one of your 'watched' accounts goes offline.",
   "main": "src/core/start.ts",
   "scripts": {
+    "start": "ts-node src/core/start.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "@types/node": "^13.11.1",
+    "@types/nodemon": "^1.19.0",
     "@typescript-eslint/eslint-plugin": "^2.27.0",
     "@typescript-eslint/parser": "^2.27.0",
     "eslint": "^6.8.0",
