@@ -1,100 +1,37 @@
 /* eslint-disable no-dupe-class-members */
-import { default as gsheetdb, Row } from 'gsheetdb'
-import { stringArray, ElementType, PartialRecord } from './utils'
-import { client } from '../core/app'
+import { stringArray, ElementType } from './utils'
+import Database, { DBValue } from 'gsheet-database'
 
 const sheetNames = stringArray('bot', 'prefix', 'targets')
-
 type sheetName = ElementType<typeof sheetNames>
-type settingsValue = ElementType<Row>
-type settingsSheet = Record<string, settingsValue>
 
 const { GOOGLE_API_CREDS, GOOGLE_STORAGE_ID } = process.env
 
 export class SettingsManager {
-  private initializer?: Promise<void>
-  private settings: PartialRecord<sheetName, settingsSheet>
-  private sheets: PartialRecord<sheetName, gsheetdb>
+  private db: Database
 
   constructor() {
-    this.sheets = {}
-    this.settings = {}
-    this.initializer = this.init()
+    this.db = new Database({
+      sheetID: GOOGLE_STORAGE_ID,
+      auth: JSON.parse(GOOGLE_API_CREDS)
+    })
   }
 
-  get ready() {
-    return !this.initializer
+  get isReady() {
+    return this.db.isReady
   }
 
-  async init(force = false) {
-    if (this.ready || force) {
-      client.emit('debug', '[settings] Loading settings...')
-      for (const name of sheetNames) {
-        const sheet = new gsheetdb({
-          credentialsJSON: JSON.parse(GOOGLE_API_CREDS),
-          sheetName: name,
-          spreadsheetId: GOOGLE_STORAGE_ID
-        })
-        this.sheets[name] = sheet
-        this.settings[name] = await fetchSettings(sheet)
-      }
-      client.emit('debug', '[settings] Settings loaded successfully.')
-    } else return this.initializer
+  get(table: sheetName): Promise<Record<string, DBValue>>
+  get(table: sheetName, key: string): Promise<DBValue>
+  get(table: sheetName, key?: string) {
+    return this.db.get(table, key)
   }
 
-  async get(sheet: sheetName): Promise<settingsSheet>
-  async get(sheet: sheetName, key: string): Promise<settingsValue>
-  async get(sheet: sheetName, key?: string) {
-    if (!sheetNames.includes(sheet)) throw new TypeError(`Provided sheet name doesn't exist. (Received: '${sheet}'`)
-
-    if (!this.ready) await this.initializer
-
-    return key ? this.settings[sheet][key] : this.settings[sheet]
+  set(table: sheetName, key: string, value: DBValue) {
+    return this.db.set(table, key, value)
   }
 
-  async set(sheet: sheetName, key: string, value: settingsValue) {
-    if (!sheetNames.includes(sheet)) throw new TypeError(`Provided sheet name doesn't exist. (Received: '${sheet}'`)
-
-    if (!this.ready) await this.initializer
-
-    const gSheet = this.sheets[sheet],
-      existingIndex = (await gSheet.getData())?.find(entry => entry.values[0] == key)?.rowNb,
-      futureRow = [key, value]
-
-    this.settings[sheet][key] = value
-
-    return existingIndex
-      ? gSheet.updateRow(existingIndex, futureRow)
-      : gSheet.insertRows([futureRow])
+  delete(table: sheetName, key: string) {
+    return this.db.delete(table, key)
   }
-
-  async delete(sheet: sheetName, key: string, existingValue?: settingsValue, reason?: string) {
-    if (!sheetNames.includes(sheet)) throw new TypeError(`Provided sheet name doesn't exist. (Received: '${sheet}'`)
-
-    if (!this.ready) await this.initializer
-
-    const gSheet = this.sheets[sheet],
-      existingIndex = (await gSheet.getData())?.find(entry => entry.values[0] == key)?.rowNb
-
-    if (existingIndex) {
-      gSheet.updateRow(existingIndex, [key, '', existingValue || (await this.get(sheet, key)), reason])
-    } else client.emit('warn', `[settings] Request to delete entry with key '${key}' has been rejected: unable to find entry.`)
-  }
-}
-
-/**
- * Gets the settings from a Sheet. Returns an object
- * @param sheet The sheet to extract properties from
- */
-async function fetchSettings(sheet: gsheetdb): Promise<settingsSheet> {
-  const rawData = await sheet.getData()
-
-  const result: Record<string, settingsValue> = {}
-
-  for (const { values } of rawData) {
-    const [key, value] = values
-    result[String(key)] = value
-  }
-
-  return result
 }

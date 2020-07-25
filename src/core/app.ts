@@ -28,7 +28,6 @@ function initClient() {
 
     try {
       settings = new SettingsManager()
-      await settings.init()
     } catch (e) {
       client.emit('error', e)
       owner?.send(`Error during client initialization:\n\`\`\`\n${e}\n\`\`\``, { split: true })

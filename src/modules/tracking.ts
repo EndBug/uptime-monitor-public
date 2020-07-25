@@ -66,27 +66,25 @@ export class Tracker {
     const options = await settings.get('targets')
 
     for (const key in options) {
-      const parsed = JSON.parse(String(options[key]))
-
-      if (!isTargetOptions(parsed)) {
+      if (!isTargetOptions(options)) {
         alert(`Invalid target options in database. ID: \`${key}\``)
-        settings.delete('targets', key, options[key])
+        settings.delete('targets', key)
         continue
       }
 
-      const target = await client.users.fetch(parsed.id),
-        channel = parsed.channel.type == 'dm' ? await client.users.fetch(parsed.authorID) : await client.channels.fetch(parsed.channel.channelID).then(c => c.type == 'text' ? c : undefined)
+      const target = await client.users.fetch(options.id),
+        channel = options.channel.type == 'dm' ? await client.users.fetch(options.authorID) : await client.channels.fetch(options.channel.channelID).then(c => c.type == 'text' ? c : undefined)
       if (!target) {
-        settings.delete('targets', key, options[key], `Couldn't find target user. ID: ${parsed.id}`)
-        if (canSendTo(channel)) channel.send(`Hi, I can't find your target with the following ID: \`${parsed.id}\`. Please check that I'm in at least one guild with the target and try to add it again: I'll stop tracking it for the moment.`)
+        settings.delete('targets', key)
+        if (canSendTo(channel)) channel.send(`Hi, I can't find your target with the following ID: \`${options.id}\`. Please check that I'm in at least one guild with the target and try to add it again: I'll stop tracking it for the moment.`)
       }
       if (!canSendTo(channel)) {
-        settings.delete('targets', key, options[key], `Couldn't find notification channel. ID: ${parsed.channel.type == 'text' ? `${parsed.channel.channelID} (text)` : `${parsed.authorID} (user)`}`)
+        settings.delete('targets', key)
       }
 
-      this.targetOptions[parsed.id] = [
-        ...(this.targetOptions[parsed.id] || []),
-        parsed
+      this.targetOptions[options.id] = [
+        ...(this.targetOptions[options.id] || []),
+        options
       ]
     }
 
@@ -106,7 +104,7 @@ export class Tracker {
           this.targetOptions[targetID].forEach(async (options) => {
             const channel = options.channel.type == 'dm' ? await client.users.fetch(options.authorID) : await client.channels.fetch(options.channel.channelID).then(c => c.type == 'text' ? c : undefined)
 
-            settings.delete('targets', getDatabaseKey(options), JSON.stringify(options), `Couldn't find target user. ID: ${targetID}`)
+            settings.delete('targets', getDatabaseKey(options))
             if (canSendTo(channel)) channel.send(`Hi, I can't find your target with the following ID: \`${targetID}\`. Please check that I'm in at least one guild with the target and try to add it again: I'll stop tracking it for the moment.`)
           })
           delete this.targetOptions[targetID]
