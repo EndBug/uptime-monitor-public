@@ -1,7 +1,12 @@
-import { User, GuildMember } from 'discord.js'
+import { User, GuildMember, TextChannel, DMChannel } from 'discord.js'
 import { ownerID, settings, client, supportGuildID } from '../core/app'
 
 // #region Functions
+
+/** Returns whether some value is a channel (text or dm) or a user (user or member) */
+export function canSendTo(value: any): value is TextChannel | DMChannel | User | GuildMember {
+  return typeof value == 'object' && typeof value.send == 'function'
+}
 
 /** Returns str with capital first letter */
 export function capitalize(str: string) {

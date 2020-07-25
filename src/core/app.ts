@@ -59,3 +59,9 @@ function loadModules() {
     client.emit('debug', `[modules] Loaded ${file} module.`)
   }
 }
+
+export function alert(msg: string) {
+  const str = '[ALERT] ' + msg
+  console.error(str)
+  if (owner) owner.send(str)
+}

@@ -45,7 +45,7 @@ export class SettingsManager {
   async get(sheet: sheetName): Promise<settingsSheet>
   async get(sheet: sheetName, key: string): Promise<settingsValue>
   async get(sheet: sheetName, key?: string) {
-    if (!sheetNames.includes(sheet)) throw new TypeError(`Provided key is not a settings key. (Received: '${sheet}'`)
+    if (!sheetNames.includes(sheet)) throw new TypeError(`Provided sheet name doesn't exist. (Received: '${sheet}'`)
 
     if (!this.ready) await this.initializer
 
@@ -53,7 +53,7 @@ export class SettingsManager {
   }
 
   async set(sheet: sheetName, key: string, value: settingsValue) {
-    if (!sheetNames.includes(sheet)) throw new TypeError(`Provided key is not a settings key. (Received: '${sheet}'`)
+    if (!sheetNames.includes(sheet)) throw new TypeError(`Provided sheet name doesn't exist. (Received: '${sheet}'`)
 
     if (!this.ready) await this.initializer
 
@@ -66,6 +66,19 @@ export class SettingsManager {
     return existingIndex
       ? gSheet.updateRow(existingIndex, futureRow)
       : gSheet.insertRows([futureRow])
+  }
+
+  async delete(sheet: sheetName, key: string, existingValue?: settingsValue, reason?: string) {
+    if (!sheetNames.includes(sheet)) throw new TypeError(`Provided sheet name doesn't exist. (Received: '${sheet}'`)
+
+    if (!this.ready) await this.initializer
+
+    const gSheet = this.sheets[sheet],
+      existingIndex = (await gSheet.getData())?.find(entry => entry.values[0] == key)?.rowNb
+
+    if (existingIndex) {
+      gSheet.updateRow(existingIndex, [key, '', existingValue || (await this.get(sheet, key)), reason])
+    } else client.emit('warn', `[settings] Request to delete entry with key '${key}' has been rejected: unable to find entry.`)
   }
 }
 
